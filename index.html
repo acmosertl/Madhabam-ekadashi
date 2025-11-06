@@ -60,13 +60,19 @@ td{padding:6px;border-bottom:1px solid #eee;}
 
 <script>
 // 🌸 ইসকন ক্যালেন্ডার সোর্স (free public JSON)
-const ISKCON_API = const ISKCON_API = "/api/ekadashi";
+const ISKCON_API = "/api/ekadashi";
 
-async function loadEkadashi(){
-  try{
+async function loadEkadashi() {
+  try {
     const res = await fetch(ISKCON_API);
     const data = await res.json();
-    const today = new Date();
+    console.log(data); // পরীক্ষা করার জন্য
+    // এখানে তোমার UI আপডেটের লজিক
+  } catch (err) {
+    console.error(err);
+    document.querySelector("#ekadashiName").innerText = "ডেটা লোডে সমস্যা হয়েছে";
+  }
+}
 
     // শুধুমাত্র একাদশী ইভেন্ট ফিল্টার
     const ekas = data.events.filter(e => e.type && e.type.toLowerCase().includes("ekadasi"));
