@@ -2,89 +2,147 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>মাধবম একাদশী ক্যালেন্ডার</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>🌸 মাধবম একাদশী ক্যালেন্ডার v9A.3</title>
 <style>
-body{font-family:"Noto Sans Bengali",sans-serif;background:#fff6e9;margin:0;padding:0;text-align:center;}
-.card{background:#b71c1c;color:#fff;margin:10px auto;padding:20px;border-radius:18px;width:90%;max-width:360px;
-box-shadow:0 2px 10px rgba(0,0,0,0.15);}
-.title{font-size:22px;font-weight:700;}
-.sub{font-size:32px;font-weight:700;color:#ffea00;text-shadow:0 0 8px #ffb300;}
-.date{font-size:16px;margin-top:8px;}
-.loc{margin:12px 0;font-size:14px;color:#fff8e1;}
-.btn{background:linear-gradient(90deg,#ffa000,#ffca28);border:none;border-radius:12px;padding:8px 16px;
-font-size:15px;color:#4e342e;font-weight:600;cursor:pointer;margin-top:10px;}
-.btn:hover{background:linear-gradient(90deg,#ffb300,#ffecb3);}
-.small{font-size:13px;color:#4e342e;margin-top:10px;}
-/* popup modal */
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);
-backdrop-filter:blur(2px);z-index:99;justify-content:center;align-items:center;}
-.modal-content{background:#fff3e0;color:#3e2723;border-radius:16px;padding:20px;width:90%;max-width:420px;
-max-height:80vh;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,0.25);}
-.modal-content h3{margin-top:0;font-size:20px;color:#6a1b9a;}
-table{width:100%;border-collapse:collapse;margin-top:10px;}
-th,td{border-bottom:1px solid #d7ccc8;padding:8px 4px;font-size:15px;text-align:center;}
-th{background:#f3e5f5;color:#4a148c;}
-.close{position:absolute;right:16px;top:12px;font-size:20px;color:#c62828;cursor:pointer;}
+:root{--red:#c62828;--gold:#ffd54f;--cream:#fff8e1;--ink:#3e2723;}
+body{margin:0;background:#fff4e3;font-family:"Noto Sans Bengali",system-ui,sans-serif;color:#1a1a1a}
+.wrap{max-width:420px;margin:12px auto;padding:8px}
+.card{background:linear-gradient(180deg,#c62828,#ad2a2a);color:#fff;border-radius:18px;padding:18px;
+box-shadow:0 6px 18px rgba(0,0,0,.15);text-align:center}
+.title{font-size:22px;font-weight:900;margin:0 0 8px}
+.name{font-size:32px;font-weight:900;color:var(--gold);text-shadow:0 0 12px rgba(255,213,79,.6)}
+.meta{font-size:16px;margin-top:6px;font-weight:700}
+.paran{font-size:14px;margin-top:6px}
+.tick{color:#52ff8f;font-weight:900;margin-left:4px}
+.loc{font-size:12px;margin-top:10px;opacity:.9}
+.btn{margin-top:12px;background:linear-gradient(90deg,#ffb300,#ffecb3);border:none;border-radius:12px;
+padding:10px 16px;font-weight:800;color:#4e342e;cursor:pointer}
+.btn:hover{background:linear-gradient(90deg,#ffca28,#fff59d)}
+.note{font-size:11px;margin-top:10px;color:#5d4037}
+
+/* floating popup overlay */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(5px);
+z-index:100;align-items:center;justify-content:center;animation:fade .3s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.box{background:var(--cream);color:var(--ink);border-radius:18px;box-shadow:0 10px 28px rgba(0,0,0,.25);
+width:min(90vw,420px);aspect-ratio:1/1;display:flex;flex-direction:column;overflow:hidden;animation:pop .25s ease}
+@keyframes pop{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+.head{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #e0cfc2}
+.head h3{margin:0;font-size:16px;color:#6a1b9a}
+.close{font-size:18px;color:#c62828;font-weight:900;cursor:pointer}
+.body{flex:1;overflow:auto;padding:8px 10px}
+table{width:100%;border-collapse:collapse}
+th{background:#f3e5f5;color:#6a1b9a;font-size:12px;padding:6px;position:sticky;top:0}
+td{padding:6px;border-bottom:1px solid #e0cfc2;font-size:13px;text-align:center}
+.tr-cur{background:#fff3e0;outline:2px solid #fbc02d}
+.badge{display:inline-block;font-size:10px;padding:2px 6px;border-radius:10px;background:#ffe082;color:#5d4037;margin-left:4px}
 </style>
 </head>
 <body>
-<div class="card" id="ekadashiCard">
-  <div class="title">🌸 পরবর্তী একাদশী</div>
-  <div class="sub" id="ekaName">লোড হচ্ছে...</div>
-  <div class="date" id="ekaDate">–</div>
-  <div class="loc">📍 ভারত • IST (UTC+05:30)</div>
-  <button class="btn" onclick="openList()">🔔 সম্পূর্ণ একাদশী তালিকা দেখুন</button>
-  <div class="small">সমস্ত গণনা ভারতীয় মান সময় (IST) অনুযায়ী।</div>
+<div class="wrap">
+  <section class="card">
+    <h2 class="title">🌸 পরবর্তী একাদশী</h2>
+    <div class="name" id="ekaName">লোড হচ্ছে…</div>
+    <div class="meta" id="ekaDate">—</div>
+    <div class="paran" id="ekaParan"></div>
+    <div class="loc">📍 ভারত • IST (UTC+05:30)</div>
+    <button class="btn" id="openBtn">🔔 সম্পূর্ণ একাদশী তালিকা দেখুন</button>
+    <div class="note">সমস্ত গণনা ভারতীয় মান সময় অনুযায়ী।</div>
+  </section>
 </div>
 
-<!-- Popup Modal -->
-<div class="modal" id="listModal" onclick="closeModalOutside(event)">
-  <div class="modal-content" id="modalContent">
-    <span class="close" onclick="closeList()">✖</span>
-    <h3>🌸 বার্ষিক একাদশী তালিকা (IST)</h3>
-    <table id="ekaTable">
-      <thead><tr><th>একাদশী</th><th>তারিখ</th><th>পারণ</th></tr></thead>
-      <tbody id="ekaBody"></tbody>
-    </table>
+<!-- floating popup -->
+<div class="modal" id="popup" onclick="if(event.target===this)closePopup()">
+  <div class="box">
+    <div class="head">
+      <h3>🌸 বার্ষিক একাদশী তালিকা</h3>
+      <span class="close" onclick="closePopup()">✖</span>
+    </div>
+    <div class="body">
+      <table>
+        <thead><tr><th>একাদশী</th><th>তারিখ</th><th>পারণ</th></tr></thead>
+        <tbody id="list"></tbody>
+      </table>
+      <div class="note">যেখানে পারণ সময় উল্লিখিত, কেবল সেগুলোতে ✓ প্রদর্শিত।</div>
+    </div>
   </div>
 </div>
 
 <script>
-// Local fallback data (short sample)
-const ekadashiList=[
- {name_bn:"উত্থান একাদশী",date:"২০২৫-১১-৩০",parana:"পরের দিন সকাল ৬:৪০-৯:১০"},
- {name_bn:"মোক্ষদা একাদশী",date:"২০২৫-১২-১৪",parana:"পরের দিন সকাল ৬:৩০-৮:৫৫"},
- {name_bn:"সাফল্যা একাদশী",date:"২০২৬-০১-১০",parana:"পরের দিন সকাল ৬:৪৫-৯:১৫"}
+const IST="Asia/Kolkata";
+function nowIST(){return new Date(new Date().toLocaleString('en-US',{timeZone:IST}))}
+function parseDate(s){const[a,b,c]=s.split('-').map(Number);return new Date(Date.UTC(c,b-1,a))}
+function daysLeft(s){const t=parseDate(s),n=nowIST();return Math.ceil((t-n)/86400000)}
+function fmt(d){const dd=String(d.getUTCDate()).padStart(2,'0'),mm=String(d.getUTCMonth()+1).padStart(2,'0');return`${dd}-${mm}-${d.getUTCFullYear()}`}
+function hasTime(s){return /[0-9]{1,2}:[0-9]{2}/.test(s||'')}
+
+let data=[ /* same 24-item local list */ 
+ {name_bn:"সাফল্যা একাদশী",date:"10-01-2025",parana:"পরের দিন সকাল 6:45–9:15 AM"},
+ {name_bn:"পুত্রদা একাদশী",date:"25-01-2025",parana:"পরের দিন সকাল 6:50–9:20 AM"},
+ {name_bn:"শততিলা একাদশী",date:"09-02-2025",parana:"পরের দিন সকাল 6:45–9:10 AM"},
+ {name_bn:"বিজয়া একাদশী",date:"25-02-2025",parana:"পরের দিন সকাল 6:30–8:55 AM"},
+ {name_bn:"আমলকী একাদশী",date:"11-03-2025",parana:"পরের দিন সকাল 6:20–8:45 AM"},
+ {name_bn:"পাপমোচনী একাদশী",date:"26-03-2025",parana:"পরের দিন সকাল 6:00–8:35 AM"},
+ {name_bn:"কমদা একাদশী",date:"10-04-2025",parana:"পরের দিন সকাল 6:05–8:40 AM"},
+ {name_bn:"বরূথিনী একাদশী",date:"25-04-2025",parana:"পরের দিন সকাল 5:50–8:20 AM"},
+ {name_bn:"মোহিনী একাদশী",date:"10-05-2025",parana:"পরের দিন সকাল 5:45–8:10 AM"},
+ {name_bn:"অপরা একাদশী",date:"25-05-2025",parana:"পরের দিন সকাল 5:40–8:00 AM"},
+ {name_bn:"নির্জলা একাদশী",date:"09-06-2025",parana:"পরের দিন সকাল 5:35–8:00 AM"},
+ {name_bn:"যোগিনী একাদশী",date:"24-06-2025",parana:"পরের দিন সকাল 5:40–8:10 AM"},
+ {name_bn:"শায়নী একাদশী",date:"08-07-2025",parana:"পরের দিন সকাল 5:45–8:15 AM"},
+ {name_bn:"কামিকা একাদশী",date:"23-07-2025",parana:"পরের দিন সকাল 5:50–8:25 AM"},
+ {name_bn:"পুত্রদা একাদশী",date:"06-08-2025",parana:"পরের দিন সকাল 5:55–8:30 AM"},
+ {name_bn:"অন্নদা একাদশী",date:"21-08-2025",parana:"পরের দিন সকাল 6:00–8:35 AM"},
+ {name_bn:"পরম একাদশী",date:"05-09-2025",parana:"পরের দিন সকাল 6:05–8:40 AM"},
+ {name_bn:"ইন্দিরা একাদশী",date:"20-09-2025",parana:"পরের দিন সকাল 6:10–8:45 AM"},
+ {name_bn:"পাপাঙ্কুশা একাদশী",date:"05-10-2025",parana:"পরের দিন সকাল 6:15–8:55 AM"},
+ {name_bn:"রমা একাদশী",date:"15-11-2025",parana:"পরের দিন সকাল 6:40–9:10 AM"},
+ {name_bn:"উত্থান একাদশী",date:"30-11-2025",parana:"পরের দিন সকাল 6:40–9:10 AM"},
+ {name_bn:"মোক্ষদা একাদশী",date:"14-12-2025",parana:"পরের দিন সকাল 6:30–8:55 AM"},
+ {name_bn:"সাফল্যা একাদশী",date:"10-01-2026",parana:"পরের দিন সকাল 6:45–9:15 AM"},
+ {name_bn:"পুত্রদা একাদশী",date:"25-01-2026",parana:"পরের দিন সকাল 6:50–9:20 AM"}
 ];
-function loadNext(){
-  const now=new Date();const future=ekadashiList.find(e=>new Date(e.date.replace(/-/g,'-'))>now);
-  if(!future)return;
-  document.getElementById("ekaName").innerText=future.name_bn;
-  document.getElementById("ekaDate").innerText=future.date+" • "+daysLeft(future.date)+" দিন বাকি";
+
+function rollover(){
+ const today=nowIST();today.setUTCHours(0,0,0,0);
+ while(parseDate(data[0].date)<today){
+   const p=data.shift();const d=parseDate(p.date);d.setUTCFullYear(d.getUTCFullYear()+1);
+   data.push({...p,date:fmt(d)});
+ }
 }
-function daysLeft(d){
-  const diff=(new Date(d.replace(/-/g,'-'))-new Date())/86400000;
-  return Math.ceil(diff);
+
+function render(){
+ rollover();
+ const today=nowIST();let next=data.find(e=>parseDate(e.date)>=today)||data[0];
+ document.getElementById('ekaName').textContent=next.name_bn;
+ const l=daysLeft(next.date);
+ document.getElementById('ekaDate').textContent=`${next.date} • ${l<=0?'আজ একাদশী 🌸':l+' দিন বাকি'}`;
+ const p=document.getElementById('ekaParan');
+ if(hasTime(next.parana)){
+   p.innerHTML=`পারণ: ${next.parana}<span class="tick">✓</span>`;
+ }else p.textContent='';
+ const tb=document.getElementById('list');tb.innerHTML='';
+ data.forEach(e=>{
+   const tr=document.createElement('tr');
+   if(e.date===next.date)tr.className='tr-cur';
+   tr.innerHTML=`<td>${e.name_bn}</td><td>${e.date}</td><td>${hasTime(e.parana)?e.parana+' ✓':'পরের দিন'}</td>`;
+   tb.appendChild(tr);
+ });
 }
-function openList(){
-  const body=document.getElementById("ekaBody");
-  body.innerHTML="";
-  ekadashiList.forEach(e=>{
-    body.innerHTML+=`<tr><td>${e.name_bn}</td><td>${e.date}</td><td>${e.parana}</td></tr>`;
-  });
-  const modal=document.getElementById("listModal");
-  modal.style.display="flex";
-  window.parent.postMessage({madhabamResize:800},"*");
+
+function schedule(){
+ setInterval(render,30*60*1000);
+ const n=nowIST();const next=new Date(n);next.setHours(5,5,0,0);
+ if(next-n<=0)next.setDate(next.getDate()+1);
+ setTimeout(()=>{render();schedule();},next-n);
 }
-function closeList(){
-  document.getElementById("listModal").style.display="none";
-  window.parent.postMessage({madhabamResize:520},"*");
-}
-function closeModalOutside(e){
-  if(e.target.id==="listModal"){closeList();}
-}
-loadNext();
+
+const popup=document.getElementById('popup');
+document.getElementById('openBtn').onclick=()=>popup.style.display='flex';
+function closePopup(){popup.style.display='none';}
+
+(function init(){render();schedule();})();
 </script>
 </body>
 </html>
