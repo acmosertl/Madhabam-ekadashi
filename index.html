@@ -101,184 +101,66 @@
   </div>
 </dialog>
 
-<script>
-/* =========================
-   CONFIG — শুধু তিনটা জিনিস বসান
-   ========================= */
-/* CONFIG (এগুলো একবার সেট করলে আর কিছুই করতে হবে না) */
+  <script>
+/* ================ CONFIG ================= */
 const ISKCON_URL  = "https://calendar-api.iskcondesiretree.com/api/v1/ekadasi?place=kolkata";
 const PANJIKA_BASE = "https://madhavam-surya-siddhanto-panjika.vercel.app";
-const LOCAL_JSON = "https://madhabam-ekadashi.vercel.app/api/ekadashi";
+const LOCAL_JSON  = "https://madhabam-ekadashi.vercel.app/api/ekadashi";
 
-  /* ===== Fetch and Render Ekadashi Data ===== */
-
+/* ================ MAIN FUNCTION ================= */
 async function loadEkadashiData() {
+  const card = document.querySelector(".ekadashi-name");
   try {
-    console.log("🔍 Trying to fetch data from:", LOCAL_JSON);
-    const res = await fetch(LOCAL_JSON);
+    const res = await fetch(LOCAL_JSON, { cache: "no-store" });
     if (!res.ok) throw new Error("Fetch failed");
+
     const data = await res.json();
-    const list = data.ekadashi_list;
+    const list = data.ekadashi_list || [];
 
-    // Sort by date
+    if (!list.length) throw new Error("No Ekadashi list found");
+
+    // sort & detect next
     const sorted = list.sort((a, b) => new Date(a.date) - new Date(b.date));
+    const today = new Date();
+    const next = sorted.find(e => new Date(e.date) >= today) || sorted[0];
+    const remain = Math.ceil((new Date(next.date) - today) / (1000 * 60 * 60 * 24));
 
-    // Find next Ekadashi
-    const now = new Date();
-    const next = sorted.find(e => new Date(e.date) >= now);
-    const remain = Math.ceil((new Date(next.date) - now) / (1000 * 60 * 60 * 24));
-
-    // Card section
+    // ---- CARD UPDATE ----
     document.querySelector(".ekadashi-name").innerText = next.name;
     document.querySelector(".ekadashi-date").innerText = next.date;
-    document.querySelector(".ekadashi-remaining").innerText = remain + " দিন বাকি";
+    document.querySelector(".ekadashi-remaining").innerText = `${remain} দিন বাকি`;
     document.querySelector(".ekadashi-paran").innerText =
-      `পারণ: পরের দিন সকাল ${next.paran_start || "--"}–${next.paran_end || "--"} ${
+      `পারণ: ${next.paran_start || "--"} - ${next.paran_end || "--"} ${
         next.verified ? "✅ (" + next.verified + ")" : ""
       }`;
+
     document.querySelector(".load-status").style.display = "none";
 
-    // Annual List section
-    const table = document.querySelector(".annual-ekadashi tbody");
-    table.innerHTML = sorted
+    // ---- TABLE UPDATE ----
+    const tbody = document.querySelector(".annual-ekadashi tbody");
+    tbody.innerHTML = sorted
       .map(
         e => `
         <tr>
           <td>${e.name}</td>
           <td>${e.date}</td>
-          <td>${e.paran_start ? `পরের দিন সকাল ${e.paran_start}–${e.paran_end}` : "-"}</td>
+          <td>${e.paran_start || "--"} - ${e.paran_end || "--"} ${e.verified ? "(" + e.verified + ")" : ""}</td>
         </tr>`
       )
       .join("");
+
   } catch (err) {
-    console.error(err);
-    document.querySelector(".ekadashi-name").innerText = "ডাটা লোড সমস্যা…";
+    console.error("❌ Ekadashi Load Error:", err);
+    document.querySelector(".ekadashi-name").innerText = "ডাটা লোড সমস্যা...";
   }
 }
 
-// Run on load
+/* Auto load */
 loadEkadashiData();
 
-  
-/* ===== Utility ===== */
-const pad = n => String(n).padStart(2,"0");
-const isoToDMY = iso => { const [y,m,d]=iso.split("-"); return `${pad(+d)}-${pad(+m)}-${y}` };
-const daysLeft = (iso) => {
-  const a = new Date(iso+"T00:00:00+05:30"); // IST assume
-  const b = new Date();
-  const diff = Math.ceil((a - b)/(24*3600*1000));
-  return diff;
-};
-function sortByDate(list){ return [...list].sort((x,y)=> x.date_iso.localeCompare(y.date_iso)); }
+/* Auto refresh every 3 hours */
+setInterval(loadEkadashiData, 3 * 60 * 60 * 1000);
+  </script>
 
-/* ===== Data loaders (fallback: ISKCON -> LOCAL_JSON -> CACHE) ===== */
-async function tryFetch(url,label){
-  if(!url) throw new Error("empty-url");
-  const r = await fetch(url,{cache:"no-store"});
-  if(!r.ok) throw new Error(label+" HTTP "+r.status);
-  const data = await r.json();
-  if(!Array.isArray(data)) throw new Error(label+" invalid JSON");
-  return {label, data};
-}
-
-async function loadAll(){
-  let source = null;
-  let data = null;
-
-  // 1) ISKCON
-  try{
-    if(ISKCON_URL){
-      const res = await tryFetch(ISKCON_URL,"ISKCON");
-      source = res.label; data = res.data.map(x=>({...x, verified:true}));
-    }
-  }catch(e){ /* skip */ }
-
-  // 2) LOCAL JSON (same-origin)
-  if(!data){
-    try{
-      const res = await tryFetch(LOCAL_JSON,"LOCAL");
-      // যদি ISKCON আগে না আসে, verified=false
-      source = res.label; data = res.data.map(x=>({...x, verified: x.verified ?? false}));
-    }catch(e){ /* skip */ }
-  }
-
-  // 3) CACHE (localStorage)
-  if(!data){
-    const stash = localStorage.getItem("ekadashi_cache");
-    if(stash){
-      source = "CACHE";
-      data = JSON.parse(stash);
-    }
-  }
-
-  if(!data) throw new Error("No data from any source.");
-  // 24টি রাখি, sorted
-  data = sortByDate(data).slice(0,24);
-  // cache save
-  localStorage.setItem("ekadashi_cache", JSON.stringify(data));
-  localStorage.setItem("ekadashi_cache_time", new Date().toISOString());
-  return {source, data};
-}
-
-/* ===== Renderers ===== */
-function renderCard(upcoming, sourceLabel){
-  document.getElementById("ekName").textContent = upcoming.name_bn || "—";
-  document.getElementById("ekDate").textContent = isoToDMY(upcoming.date_iso);
-  document.getElementById("ddays").textContent = Math.max(0, daysLeft(upcoming.date_iso));
-  document.getElementById("ekParana").textContent = upcoming.parana_bn || "—";
-  const tick = document.getElementById("vTick");
-  tick.style.display = upcoming.verified ? "inline" : "none";
-  const st = document.getElementById("sourceTag");
-  st.textContent = "সোর্স: " + (sourceLabel === "ISKCON" ? "ISKCON ✅" :
-                                 sourceLabel === "LOCAL"  ? "Madhavam Panjikā" :
-                                 "Cached");
-}
-
-function renderTables(list){
-  const rows = list.map(x=>`<tr><td>${x.name_bn}</td><td>${isoToDMY(x.date_iso)}</td><td>${x.parana_bn||"—"}</td></tr>`).join("");
-  document.getElementById("tblBody").innerHTML = rows || `<tr><td colspan="3" class="center">কোনো তথ্য পাওয়া যায়নি</td></tr>`;
-  document.getElementById("tblBodyPop").innerHTML = rows || `<tr><td colspan="3" class="center">কোনো তথ্য পাওয়া যায়নি</td></tr>`;
-}
-
-/* ===== Sunrise-based refresh (simple) + 12h backup =====
-   - প্রতি 12 ঘন্টায় একবার চেক
-   - আজকের তারিখ বদলালে (লোকাল) ফোর্স রিলোড
-*/
-function scheduleAutoRefresh(){
-  // 12h
-  setInterval(()=>location.reload(), 12*60*60*1000);
-  // local date flip
-  const startDay = new Date().getDate();
-  setInterval(()=>{
-    if(new Date().getDate() !== startDay) location.reload();
-  }, 30*60*1000);
-}
-
-/* ===== Init ===== */
-(async function init(){
-  // IST Badge
-  document.getElementById("tzBadge").textContent = "IST • UTC+05:30";
-
-  try{
-    const {source, data} = await loadAll();
-    // pick upcoming
-    const todayISO = new Date().toISOString().slice(0,10);
-    const upcoming = sortByDate(data).find(x=>x.date_iso >= todayISO) || data[0];
-    renderCard(upcoming, source);
-    renderTables(data);
-  }catch(e){
-    document.getElementById("ekName").textContent = "ডাটা লোডে সমস্যা…";
-    console.error(e);
-  }
-
-  scheduleAutoRefresh();
-})();
-
-/* Popup controls */
-const pop = document.getElementById("popup");
-document.getElementById("openList").addEventListener("click", ()=> pop.showModal());
-document.getElementById("closePop").addEventListener("click", ()=> pop.close());
-pop.addEventListener("click", (e)=>{ if(e.target===pop) pop.close(); });
-</script>
 </body>
 </html>
