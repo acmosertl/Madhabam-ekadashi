@@ -1,65 +1,52 @@
-<!-- 🌕 Mādhavam Ekadashi Hybrid Final LTS Version --><div id="ekadashi-widget" style="font-family: 'Shiliguri', 'Baluda', 'Noto Sans Bengali', sans-serif; background:#fff1d6; border-radius:16px; box-shadow:0 0 8px #c3a97c; padding:18px; text-align:center; max-width:420px; margin:auto;">
-  <h3 style="color:#E53935; margin-bottom:10px;">🌸 বার্ষিক একাদশী তালিকা</h3>
-  <small id="update-info" style="color:#666;">ডেটা লোড হচ্ছে...</small>
-  <div id="ekadashi-table" style="margin-top:12px; max-height:400px; overflow-y:auto;"></div>
+<!-- 🌕 Mādhavam Ekadashi – Final Hybrid LTS --><div id="ekaWrap" style="font-family:'Noto Sans Bengali',sans-serif;background:#fff4e3;color:#1a1a1a;max-width:720px;margin:auto;border-radius:20px;box-shadow:0 4px 12px rgba(0,0,0,.15);padding:18px;">
+  <h2 style="text-align:center;color:#E53935;margin-bottom:10px;">🌸 মাধবম একাদশী তালিকা</h2>
+  <div id="ekaList" style="max-height:480px;overflow-y:auto;padding-right:6px;"></div>
+  <p id="ekaInfo" style="font-size:13px;text-align:center;margin-top:10px;color:#555;">ডেটা লোড হচ্ছে...</p>
 </div><script>
 (async function(){
-  const GH_JSON = "https://raw.githubusercontent.com/acmosertl/Madhavam-Surya-Siddhanto-Panjika-/main/ekadashi.json";
-  const PROXY_API = "https://madhavam-surya-siddhanto-panjika.vercel.app/api/ekadashi-proxy";
-  const REFRESH_HOURS = 12;
-  const now = Date.now();
-  const lastUpdate = localStorage.getItem("madhavam_ekadashi_updated");
-  const ekDiv = document.getElementById("ekadashi-table");
-  const info = document.getElementById("update-info");
+  const API_URL="https://madhavam-surya-siddhanto-panjika.vercel.app/api/ekadashi"; 
+  const FALLBACK="https://raw.githubusercontent.com/acmosertl/Madhavam-Surya-Siddhanto-Panjika-/main/ekadashi.json";
+  const REFRESH=12*3600*1000;
+  const now=Date.now();
+  const last=localStorage.getItem("madhavam_ekadashi_updated");
+  const box=document.getElementById("ekaList"),info=document.getElementById("ekaInfo");
 
-  async function fetchData(){
-    try {
-      const res = await fetch(PROXY_API, {cache:"no-store"});
-      if(!res.ok) throw new Error("Proxy failed");
-      const json = await res.json();
-      localStorage.setItem("madhavam_ekadashi_data", JSON.stringify(json.data || json));
-      localStorage.setItem("madhavam_ekadashi_updated", now);
-      return json.data || json;
-    } catch {
-      const res2 = await fetch(GH_JSON);
-      const data = await res2.json();
-      return data.data || data;
+  async function getLive(){
+    try{
+      const r=await fetch(API_URL,{cache:"no-store"});
+      if(!r.ok) throw 0;
+      const j=await r.json();
+      localStorage.setItem("madhavam_ekadashi_data",JSON.stringify(j.data||j));
+      localStorage.setItem("madhavam_ekadashi_updated",now);
+      return j.data||j;
+    }catch(e){
+      const r=await fetch(FALLBACK);
+      const d=await r.json();
+      return d.data||d;
     }
   }
 
-  async function getData(){
-    let data = [];
-    if(lastUpdate && now - lastUpdate < REFRESH_HOURS*3600*1000){
-      const cached = localStorage.getItem("madhavam_ekadashi_data");
-      if(cached) data = JSON.parse(cached);
-    }
-    if(!data || !data.length) data = await fetchData();
-    renderTable(data);
+  let data=[];
+  if(last && now-last<REFRESH){
+    const cache=localStorage.getItem("madhavam_ekadashi_data");
+    if(cache) data=JSON.parse(cache);
   }
+  if(!data.length) data=await getLive();
 
-  function renderTable(list){
-    if(!list || !list.length){ ekDiv.innerHTML="<p>❌ কোনো তথ্য পাওয়া যায়নি</p>"; return; }
-    let html="";
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-    let currentFound = false;
-    list.forEach(item=>{
-      const isToday = item.date===todayStr;
-      if(isToday && !currentFound){
-        localStorage.setItem("currentEkadashi", JSON.stringify(item));
-        currentFound=true;
-      }
-      html+=`
-        <div style="border:1px solid #d1b075; border-radius:8px; margin-bottom:8px; padding:6px 10px; background:${isToday?'#fff9e6':'#fff'};">
-          <b style="color:${isToday?'#E53935':'#444'};">${item.name}</b><br>
-          <span style="font-size:13px;">📅 ${item.date}</span><br>
-          ${item.parana?`<span style="font-size:12px; color:#555;">পারণঃ ${item.parana}</span>`:''}
-        </div>`;
-    });
-    ekDiv.innerHTML=html;
-    info.textContent="স্বয়ংক্রিয়ভাবে আপডেট হয়েছে (ISKCON + Mādhavam)";
-  }
-
-  await getData();
+  const today=new Date(),todayISO=today.toISOString().split("T")[0];
+  let html="";
+  data.forEach(item=>{
+    const active=item.date===todayISO;
+    if(active) localStorage.setItem("currentEkadashi",JSON.stringify(item));
+    html+=`
+      <div style="background:${active?'#fff9e1':'#fff'};border:1px solid #deb76a;border-radius:12px;padding:10px;margin-bottom:8px;">
+        <b style="color:${active?'#E53935':'#333'};font-size:17px;">${item.name}</b><br>
+        <span style="font-size:14px;">📅 ${item.date}</span><br>
+        ${item.parana?`<span style="font-size:13px;color:#444;">পারণঃ ${item.parana}</span>`:''}
+        ${item.verified?' <span style="color:#2e7d32;font-size:12px;">✔ ISKCON verified</span>':''}
+      </div>`;
+  });
+  box.innerHTML=html||"<p style='text-align:center'>❌ কোনো তথ্য পাওয়া যায়নি</p>";
+  info.textContent="স্বয়ংক্রিয়ভাবে আপডেট হয়েছে (Panchika + ISKCON)";
 })();
 </script>
