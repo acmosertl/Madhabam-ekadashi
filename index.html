@@ -110,6 +110,55 @@ const ISKCON_URL  = "https://calendar-api.iskcondesiretree.com/api/v1/ekadasi?pl
 const PANJIKA_BASE = "https://madhavam-surya-siddhanto-panjika.vercel.app";
 const LOCAL_JSON = "https://madhabam-ekadashi.vercel.app/api/ekadashi";
 
+  /* ===== Fetch and Render Ekadashi Data ===== */
+
+async function loadEkadashiData() {
+  try {
+    const res = await fetch(LOCAL_JSON);
+    if (!res.ok) throw new Error("Fetch failed");
+    const data = await res.json();
+    const list = data.ekadashi_list;
+
+    // Sort by date
+    const sorted = list.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Find next Ekadashi
+    const now = new Date();
+    const next = sorted.find(e => new Date(e.date) >= now);
+    const remain = Math.ceil((new Date(next.date) - now) / (1000 * 60 * 60 * 24));
+
+    // Card section
+    document.querySelector(".ekadashi-name").innerText = next.name;
+    document.querySelector(".ekadashi-date").innerText = next.date;
+    document.querySelector(".ekadashi-remaining").innerText = remain + " দিন বাকি";
+    document.querySelector(".ekadashi-paran").innerText =
+      `পারণ: পরের দিন সকাল ${next.paran_start || "--"}–${next.paran_end || "--"} ${
+        next.verified ? "✅ (" + next.verified + ")" : ""
+      }`;
+    document.querySelector(".load-status").style.display = "none";
+
+    // Annual List section
+    const table = document.querySelector(".annual-ekadashi tbody");
+    table.innerHTML = sorted
+      .map(
+        e => `
+        <tr>
+          <td>${e.name}</td>
+          <td>${e.date}</td>
+          <td>${e.paran_start ? `পরের দিন সকাল ${e.paran_start}–${e.paran_end}` : "-"}</td>
+        </tr>`
+      )
+      .join("");
+  } catch (err) {
+    console.error(err);
+    document.querySelector(".ekadashi-name").innerText = "ডাটা লোড সমস্যা…";
+  }
+}
+
+// Run on load
+loadEkadashiData();
+
+  
 /* ===== Utility ===== */
 const pad = n => String(n).padStart(2,"0");
 const isoToDMY = iso => { const [y,m,d]=iso.split("-"); return `${pad(+d)}-${pad(+m)}-${y}` };
